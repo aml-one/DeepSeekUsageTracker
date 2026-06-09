@@ -7,6 +7,8 @@ public class AppConfig
 {
     public string ApiKey { get; set; } = "";
     public int RefreshIntervalMinutes { get; set; } = 10;
+    public string DisplayMode { get; set; } = "balance"; // "balance" or "percentage"
+    public decimal ToppedUpAmount { get; set; } // USD, used in percentage mode
 }
 
 public static class ConfigManager

@@ -17,6 +17,7 @@ public partial class MainWindow : Window
 
     private static readonly SolidColorBrush GrayBrush  = new(System.Windows.Media.Color.FromRgb(0xA0, 0xA0, 0xB0));
     private static readonly SolidColorBrush GreenBrush = new(System.Windows.Media.Color.FromRgb(0x00, 0xD2, 0xA0));
+    private static readonly SolidColorBrush YellowBrush = new(System.Windows.Media.Color.FromRgb(0xF8, 0xE0, 0x1A));
     private static readonly SolidColorBrush RedBrush   = new(System.Windows.Media.Color.FromRgb(0xE9, 0x45, 0x60));
 
     public MainWindow()
@@ -55,12 +56,24 @@ public partial class MainWindow : Window
         Left = wa.Right - Width - 20;
         Top = wa.Top + 80;
 
-        BalanceBorder.MouseDown += Balance_MouseDown;
+        BalancePanel.MouseDown += Balance_MouseDown;
+        PercentPanel.MouseDown += Balance_MouseDown;
+
+        SwitchDisplayMode();
 
         await RefreshBalanceAsync();
         ResetCountdown();
         _refreshTimer.Start();
         _countdownTimer.Start();
+    }
+
+    // ── Display mode ──────────────────────────────────────────────────────
+
+    private void SwitchDisplayMode()
+    {
+        bool isPercent = _config.DisplayMode == "percentage";
+        BalancePanel.Visibility = isPercent ? Visibility.Collapsed : Visibility.Visible;
+        PercentPanel.Visibility = isPercent ? Visibility.Visible : Visibility.Collapsed;
     }
 
     // ── Countdown ─────────────────────────────────────────────────────────
@@ -87,8 +100,7 @@ public partial class MainWindow : Window
     {
         if (string.IsNullOrWhiteSpace(_config.ApiKey))
         {
-            BalanceText.Text = "--.--";
-            CurrencyText.Text = "---";
+            ClearDisplay();
             SetStatus("No API key", GrayBrush);
             StatusCountdown.Text = "";
             return;
@@ -101,25 +113,31 @@ public partial class MainWindow : Window
 
             if (balance is not null)
             {
-                BalanceText.Text = $"{decimal.Parse(balance.TotalBalance):F2}";
-                CurrencyText.Text = balance.Currency;
-                var hasBalance = decimal.Parse(balance.TotalBalance) > 0;
+                var leftover = decimal.Parse(balance.TotalBalance);
+                var hasBalance = leftover > 0;
+
+                if (_config.DisplayMode == "percentage" && _config.ToppedUpAmount > 0)
+                {
+                    RenderPercentageMode(leftover);
+                }
+                else
+                {
+                    RenderBalanceMode(leftover, balance.Currency);
+                }
 
                 SetStatus(hasBalance ? "Available" : "Depleted",
                           hasBalance ? GreenBrush : RedBrush);
             }
             else
             {
-                BalanceText.Text = "Error";
-                CurrencyText.Text = "";
+                ClearDisplay();
                 SetStatus("No data", RedBrush);
                 StatusCountdown.Text = "";
             }
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
-            BalanceText.Text = "401";
-            CurrencyText.Text = "";
+            ClearDisplay();
             SetStatus("Invalid key", RedBrush);
             StatusCountdown.Text = "";
         }
@@ -128,6 +146,49 @@ public partial class MainWindow : Window
             SetStatus(ex.Message.Contains("DNS") ? "No internet" : "Connection error", RedBrush);
             StatusCountdown.Text = "";
         }
+    }
+
+    private void RenderBalanceMode(decimal leftover, string currency)
+    {
+        BalanceText.Text = $"{leftover:F2}";
+        CurrencyText.Text = currency;
+    }
+
+    private void RenderPercentageMode(decimal leftover)
+    {
+        var topped = _config.ToppedUpAmount;
+        var used = topped - leftover;
+        if (used < 0) used = 0;
+        if (used > topped) used = topped;
+
+        var pct = topped > 0 ? used / topped * 100m : 0m;
+
+        PercentText.Text = $"{pct:F1}%";
+        PercentDetail.Text = $"${used:F2} / ${topped:F2}";
+
+        // Fill the 4px progress bar
+        double ratio = (double)(topped > 0 ? used / topped : 0);
+        ratio = Math.Clamp(ratio, 0, 1);
+        var parentWidth = PercentPanel.ActualWidth - 24; // padding
+        if (parentWidth <= 0) parentWidth = 176;
+        ProgressFill.Width = ratio * parentWidth;
+
+        // Color: green → yellow → red
+        if (pct > 80m)
+            ProgressFill.Background = RedBrush;
+        else if (pct > 50m)
+            ProgressFill.Background = YellowBrush;
+        else
+            ProgressFill.Background = GreenBrush;
+    }
+
+    private void ClearDisplay()
+    {
+        BalanceText.Text = "--.--";
+        CurrencyText.Text = "---";
+        PercentText.Text = "--%";
+        PercentDetail.Text = "";
+        ProgressFill.Width = 0;
     }
 
     private void SetStatus(string text, SolidColorBrush color)
@@ -167,6 +228,7 @@ public partial class MainWindow : Window
         {
             ConfigManager.Save(_config);
             _refreshTimer.Interval = TimeSpan.FromMinutes(_config.RefreshIntervalMinutes);
+            SwitchDisplayMode();
             TriggerImmediateRefresh();
         }
     }

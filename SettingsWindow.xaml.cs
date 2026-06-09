@@ -19,12 +19,35 @@ public partial class SettingsWindow : Window
             HintText.Text = "Key loaded. Enter a new one to replace.";
         }
 
+        // Display mode toggle
+        bool isPercentage = _config.DisplayMode == "percentage";
+        DisplayToggle.IsChecked = isPercentage;
+        ToppedUpPanel.Visibility = isPercentage ? Visibility.Visible : Visibility.Collapsed;
+        ModeLabel.Text = isPercentage ? "Percentage" : "Balance";
+        ToppedUpBox.Text = _config.ToppedUpAmount.ToString("F2");
+
         // Select the saved interval radio
         var selected = _config.RefreshIntervalMinutes switch
         {
             1 => Rb1m, 5 => Rb5m, 30 => Rb30m, 60 => Rb60m, _ => Rb10m
         };
         selected.IsChecked = true;
+    }
+
+    private void DisplayToggle_Changed(object sender, RoutedEventArgs e)
+    {
+        if (DisplayToggle.IsChecked == true)
+        {
+            _config.DisplayMode = "percentage";
+            ToppedUpPanel.Visibility = Visibility.Visible;
+            ModeLabel.Text = "Percentage";
+        }
+        else
+        {
+            _config.DisplayMode = "balance";
+            ToppedUpPanel.Visibility = Visibility.Collapsed;
+            ModeLabel.Text = "Balance";
+        }
     }
 
     private void Interval_Checked(object sender, RoutedEventArgs e)
@@ -51,6 +74,19 @@ public partial class SettingsWindow : Window
         }
 
         _config.ApiKey = key;
+
+        // Save topped-up amount if in percentage mode
+        if (_config.DisplayMode == "percentage")
+        {
+            if (decimal.TryParse(ToppedUpBox.Text.Trim(), out var amount) && amount > 0)
+                _config.ToppedUpAmount = amount;
+            else
+            {
+                HintText.Text = "Please enter a valid Topped Up amount.";
+                return;
+            }
+        }
+
         DialogResult = true;
         Close();
     }
