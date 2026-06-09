@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Images/deepseek.png" width="96" alt="DeepSeek Usage Tracker">
+    <img src="https://github.com/aml-one/DeepSeekUsageTracker/blob/master/Images/deepseek.png?raw=true" width="96" alt="DeepSeek Usage Tracker">
 </p>
 
 <h1 align="center">DeepSeek Usage Tracker</h1>
@@ -37,10 +37,10 @@ A lightweight **240×140 px** WPF widget that sits in the corner of your screen 
 - **Settings popup** — click the ⚙ gear to configure API key, display mode, topped-up amount, and refresh interval
 - **Portable** — settings stored in `%ProgramData%\DeepSeekUsageTracker\`
 
-### Screenshots
+### Screenshot
 
 <p align="center">
-  <img src="Images/deepseek_yellow.png" width="240" alt="Widget screenshot">
+  <img src="https://github.com/aml-one/DeepSeekUsageTracker/blob/master/widget.png?raw=true" width="240" alt="Widget screenshot">
 </p>
 
 > Balance mode (left) and percentage mode (right) with progress bar.
@@ -52,7 +52,7 @@ A lightweight **240×140 px** WPF widget that sits in the corner of your screen 
 Grab the latest build from the [Executable](../Executable/) folder:
 
 <p align="center">
-  <a href="../Executable/DeepSeekUsageTracker.exe">
+  <a href="Executable/DeepSeekUsageTracker.exe">
     <strong>⬇ Download DeepSeekUsageTracker.exe</strong>
   </a>
 </p>
