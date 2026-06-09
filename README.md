@@ -52,7 +52,7 @@ A lightweight **240×140 px** WPF widget that sits in the corner of your screen 
 Grab the latest build from the [Executable](../Executable/) folder:
 
 <p align="center">
-  <a href="Executable/DeepSeekUsageTracker.exe">
+  <a href="https://github.com/aml-one/DeepSeekUsageTracker/raw/refs/heads/master/Executable/DeepSeekUsageTracker.exe">
     <strong>⬇ Download DeepSeekUsageTracker.exe</strong>
   </a>
 </p>
